@@ -39,6 +39,7 @@ func main() {
 		ctx,
 		chromedp.Emulate(device.IPadPro11landscape),
 		Login(urls[0].LoginUrl, urls[0].Username, urls[0].Password),
+		Screenshot("login"),
 		NavInvestmentPage(),
 		Screenshot("investments"),
 		TakeInvestmentValues(),
@@ -84,10 +85,7 @@ func NavInvestmentPage() chromedp.Tasks {
 }
 
 func TakeInvestmentValues() chromedp.Tasks {
-	// `//td[@data-css="Current value"]` ->
-	// $x(`//div[contains(@class, "content-product-name")]`) -> 7 products + Cash + Total
 	var currentValueNodes []*cdp.Node
-	// var instrument string
 	return chromedp.Tasks{
 		chromedp.Nodes(`//td[@data-css="Current value"]/span/text()`, &currentValueNodes),
 
@@ -95,21 +93,8 @@ func TakeInvestmentValues() chromedp.Tasks {
 			for i, n := range currentValueNodes {
 				log.Printf("value [%d] [%s]", i, n.NodeValue)
 			}
-			// Follow code doesnt work, see
-			// https://github.com/chromedp/examples/blob/master/subtree/main.go
-			// var inst string
-			// chromedp.Text(`//div[contains(@class, "content-product-name")]/span/a`, &inst).Do(ctx)
-			// log.Printf("Instrument [%s]", instrument)
-
 			return nil
 		}),
-
-		// Follow code works, but its not dynamics
-		// chromedp.Text(`(//div[contains(@class, "content-product-name")]/span/a)[2]`, &instrument),
-		// chromedp.ActionFunc(func(ctx context.Context) error {
-		// 	log.Printf("Instrument [%s]", instrument)
-		// 	return nil
-		// }),
 	}
 }
 
