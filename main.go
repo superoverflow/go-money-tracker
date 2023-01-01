@@ -35,6 +35,7 @@ func main() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
+	var html string
 	err := chromedp.Run(
 		ctx,
 		chromedp.Emulate(device.IPadPro11landscape),
@@ -44,10 +45,13 @@ func main() {
 		Screenshot("investments"),
 		TakeInvestmentValues(),
 		TakeInvestments(),
+		GetInvestmentTable(&html),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("writing investment table output")
+	os.WriteFile("table.html", []byte(html), 0644)
 }
 
 func Login(loginUrl string, username string, password string) chromedp.Tasks {
@@ -114,6 +118,18 @@ func TakeInvestments() chromedp.Tasks {
 				log.Printf("Instruments [%d] [%s]", i, n.Children[0].NodeValue)
 			}
 			return nil
+		}),
+	}
+}
+
+func GetInvestmentTable(html *string) chromedp.Tasks {
+	var tableNode []*cdp.Node
+	return chromedp.Tasks{
+		chromedp.Nodes(`//tbody`, &tableNode),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			var err error
+			*html, err = dom.GetOuterHTML().WithNodeID(tableNode[0].NodeID).Do(ctx)
+			return err
 		}),
 	}
 }
