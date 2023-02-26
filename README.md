@@ -4,11 +4,13 @@
 ** form submission
 ** taking screenshots
 ** extracting text values from table
+** posting values to google sheet
 
 ## How to run?
 - create `urls.json` with template given and fill in the values
 ```bash
 cp urls.json.template urls.json
+cp .env.template .env
 ```
 - run the program
 ```bash
