@@ -1,3 +1,5 @@
-urls.json
+*.json
 *.png
 *.html
+
+*.env

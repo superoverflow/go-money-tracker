@@ -9,12 +9,21 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/device"
+
+	"github.com/PuerkitoBio/goquery"
+
+	"encoding/base64"
+
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
+	"google.golang.org/api/sheets/v4"
 )
 
 var urlsFile = flag.String("inputfile", "urls.json", "a file containing urls and login credentials")
@@ -52,6 +61,9 @@ func main() {
 	}
 	log.Printf("writing investment table output")
 	os.WriteFile("table.html", []byte(html), 0644)
+
+	data := ExtractTableValues(html)
+	WriteToGSheet(data)
 }
 
 func Login(loginUrl string, username string, password string) chromedp.Tasks {
@@ -125,7 +137,7 @@ func TakeInvestments() chromedp.Tasks {
 func GetInvestmentTable(html *string) chromedp.Tasks {
 	var tableNode []*cdp.Node
 	return chromedp.Tasks{
-		chromedp.Nodes(`//tbody`, &tableNode),
+		chromedp.Nodes(`//table`, &tableNode),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			var err error
 			*html, err = dom.GetOuterHTML().WithNodeID(tableNode[0].NodeID).Do(ctx)
@@ -147,4 +159,60 @@ func Screenshot(filename string) chromedp.Tasks {
 			return os.WriteFile(fmt.Sprintf("%s.png", filename), buf, 0o644)
 		}),
 	}
+}
+
+// TODO Unit test
+func ExtractTableValues(html string) [][]string {
+	var rows [][]string
+	var headings, row []string
+	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(html))
+
+	doc.Find("table").Each(func(index int, tablehtml *goquery.Selection) {
+		tablehtml.Find("tr").Each(func(indextr int, rowhtml *goquery.Selection) {
+			rowhtml.Find("th").Each(func(indexth int, tableheading *goquery.Selection) {
+				headings = append(headings, tableheading.Text())
+			})
+			rowhtml.Find("td").Each(func(indexth int, tablecell *goquery.Selection) {
+				row = append(row, tablecell.Text())
+			})
+			rows = append(rows, row)
+			row = nil
+		})
+	})
+	fmt.Println("####### headings = ", len(headings), headings)
+	fmt.Println("####### rows = ", len(rows), rows)
+
+	return rows
+}
+
+func WriteToGSheet(data [][]string) {
+	sheetName := os.Getenv("GSHEET_NAME")
+	spreadsheetId := os.Getenv("GSHEET_ID")
+
+	ctx := context.Background()
+	key := os.Getenv("GSHEET_KEY")
+	credBytes, _ := base64.StdEncoding.DecodeString(key)
+	config, _ := google.JWTConfigFromJSON(credBytes, "https://www.googleapis.com/auth/spreadsheets")
+	client := config.Client(ctx)
+	srv, _ := sheets.NewService(ctx, option.WithHTTPClient(client))
+
+	fmt.Println("data ===")
+	fmt.Println(data)
+	fmt.Println("data ===")
+	values := make([][]interface{}, len(data))
+	for n, row := range data {
+		columns := make([]interface{}, len(row))
+		for i, s := range row {
+			columns[i] = s
+		}
+		values[n] = columns
+	}
+
+	row := &sheets.ValueRange{
+		Values: values,
+	}
+
+	response, _ := srv.Spreadsheets.Values.Append(
+		spreadsheetId, sheetName, row).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Context(ctx).Do()
+	fmt.Println(response)
 }
