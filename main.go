@@ -67,8 +67,8 @@ func main() {
 }
 
 func Login(loginUrl string, username string, password string) chromedp.Tasks {
-	usernameField := `//*[@id="__GUID_1007"]`
-	passwordField := `//*[@id="__GUID_1008"]`
+	usernameField := `//*[@id="vg-auth0-login-username"]`
+	passwordField := `//*[@id="vg-auth0-login-password"]`
 	submitButton := `//button[contains(text(), "Log in")]`
 
 	return chromedp.Tasks{
