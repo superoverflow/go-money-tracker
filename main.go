@@ -161,7 +161,7 @@ func Screenshot(filename string) chromedp.Tasks {
 	}
 }
 
-// TODO Unit test
+// Extract Vanguard Investment Table value, returns array of values
 func ExtractTableValues(html string) [][]string {
 	var rows [][]string
 	var headings, row []string
