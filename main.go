@@ -63,7 +63,7 @@ func main() {
 	os.WriteFile("table.html", []byte(html), 0644)
 
 	data := ExtractTableValues(html)
-	WriteToGSheet(data)
+	WriteToGSheet(data, TrimCellText)
 }
 
 func Login(loginUrl string, username string, password string) chromedp.Tasks {
@@ -185,7 +185,7 @@ func ExtractTableValues(html string) [][]string {
 	return rows
 }
 
-func WriteToGSheet(data [][]string) {
+func WriteToGSheet(data [][]string, cellTextProcessor func(string) string) {
 	sheetName := os.Getenv("GSHEET_NAME")
 	spreadsheetId := os.Getenv("GSHEET_ID")
 
@@ -196,15 +196,14 @@ func WriteToGSheet(data [][]string) {
 	client := config.Client(ctx)
 	srv, _ := sheets.NewService(ctx, option.WithHTTPClient(client))
 
-	fmt.Println("data ===")
-	fmt.Println(data)
-	fmt.Println("data ===")
+	t := time.Now()
 	values := make([][]interface{}, len(data))
 	for n, row := range data {
 		columns := make([]interface{}, len(row))
 		for i, s := range row {
-			columns[i] = s
+			columns[i] = cellTextProcessor(s)
 		}
+		columns = append(columns, t)
 		values[n] = columns
 	}
 
@@ -215,4 +214,9 @@ func WriteToGSheet(data [][]string) {
 	response, _ := srv.Spreadsheets.Values.Append(
 		spreadsheetId, sheetName, row).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Context(ctx).Do()
 	fmt.Println(response)
+}
+
+func TrimCellText(s string) string {
+	r := strings.Replace(s, "actionsTop-upSellSwitch", "", 1)
+	return strings.Trim(r, " ")
 }

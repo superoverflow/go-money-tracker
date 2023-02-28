@@ -27,3 +27,11 @@ func TestGetInvestmentTable(t *testing.T) {
 		t.Error("Result not Equal")
 	}
 }
+
+func TestTrimCellText(t *testing.T) {
+	result := TrimCellText(" FTSE 100 UCITS ETF (VUKE) actionsTop-upSellSwitch")
+	expected := "FTSE 100 UCITS ETF (VUKE)"
+	if expected != result {
+		t.Error("Result not Equal")
+	}
+}
