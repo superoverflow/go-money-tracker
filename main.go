@@ -175,7 +175,9 @@ func ExtractTableValues(html string) [][]string {
 			rowhtml.Find("td").Each(func(indexth int, tablecell *goquery.Selection) {
 				row = append(row, tablecell.Text())
 			})
-			rows = append(rows, row)
+			if len(row) != 0 {
+				rows = append(rows, row)
+			}
 			row = nil
 		})
 	})
@@ -217,6 +219,10 @@ func WriteToGSheet(data [][]string, cellTextProcessor func(string) string) {
 }
 
 func TrimCellText(s string) string {
-	r := strings.Replace(s, "actionsTop-upSellSwitch", "", 1)
-	return strings.Trim(r, " ")
+	r0 := strings.Replace(s, "actionsTop-upSellSwitch", "", 1)
+	r1 := strings.Replace(r0, "Invest", "", 1)
+	r2 := strings.Replace(r1, "Change (£)", "", 1)
+	r3 := strings.Replace(r2, "£", "", 1)
+	r4 := strings.Replace(r3, "–", "", 1)
+	return strings.Trim(r4, " ")
 }
