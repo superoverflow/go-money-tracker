@@ -24,6 +24,8 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
+
+	"github.com/joho/godotenv"
 )
 
 var urlsFile = flag.String("inputfile", "urls.json", "a file containing urls and login credentials")
@@ -188,11 +190,13 @@ func ExtractTableValues(html string) [][]string {
 }
 
 func WriteToGSheet(data [][]string, cellTextProcessor func(string) string) {
+	godotenv.Load(".env")
+
+	key := os.Getenv("GSHEET_KEY")
 	sheetName := os.Getenv("GSHEET_NAME")
 	spreadsheetId := os.Getenv("GSHEET_ID")
 
 	ctx := context.Background()
-	key := os.Getenv("GSHEET_KEY")
 	credBytes, _ := base64.StdEncoding.DecodeString(key)
 	config, _ := google.JWTConfigFromJSON(credBytes, "https://www.googleapis.com/auth/spreadsheets")
 	client := config.Client(ctx)

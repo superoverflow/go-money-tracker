@@ -6,6 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/chromedp/cdproto v0.0.0-20220924210414-0e3390be1777
 	github.com/chromedp/chromedp v0.8.6
+	github.com/joho/godotenv v1.5.1
 	golang.org/x/oauth2 v0.5.0
 	google.golang.org/api v0.110.0
 )
