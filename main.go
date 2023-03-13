@@ -196,6 +196,8 @@ func WriteToGSheet(data [][]string, cellTextProcessor func(string) string) {
 	sheetName := os.Getenv("GSHEET_NAME")
 	spreadsheetId := os.Getenv("GSHEET_ID")
 
+	fmt.Println("####### writing to sheet ", sheetName)
+
 	ctx := context.Background()
 	credBytes, _ := base64.StdEncoding.DecodeString(key)
 	config, _ := google.JWTConfigFromJSON(credBytes, "https://www.googleapis.com/auth/spreadsheets")
