@@ -1,0 +1,7 @@
+version: '2.2'
+services:
+  job:
+    build: .
+    volumes:
+      - .env:.env:ro
+      - urls.json:urls.json:ro
