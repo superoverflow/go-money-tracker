@@ -199,10 +199,8 @@ func WriteToGSheet(data [][]string, cellTextProcessor func(string) string) {
 	fmt.Println("####### writing to sheet ", sheetName)
 
 	ctx := context.Background()
-	credBytes, err := base64.StdEncoding.DecodeString(key)
-	if err != nil {
-		log.Fatal(err)
-	}
+	credBytes, _ := base64.StdEncoding.DecodeString(key)
+
 	config, _ := google.JWTConfigFromJSON(credBytes, "https://www.googleapis.com/auth/spreadsheets")
 	client := config.Client(ctx)
 	srv, _ := sheets.NewService(ctx, option.WithHTTPClient(client))
@@ -222,8 +220,12 @@ func WriteToGSheet(data [][]string, cellTextProcessor func(string) string) {
 		Values: values,
 	}
 
-	response, _ := srv.Spreadsheets.Values.Append(
+	response, err := srv.Spreadsheets.Values.Append(
 		spreadsheetId, sheetName, row).ValueInputOption("USER_ENTERED").InsertDataOption("INSERT_ROWS").Context(ctx).Do()
+
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(response)
 }
 
