@@ -199,7 +199,10 @@ func WriteToGSheet(data [][]string, cellTextProcessor func(string) string) {
 	fmt.Println("####### writing to sheet ", sheetName)
 
 	ctx := context.Background()
-	credBytes, _ := base64.StdEncoding.DecodeString(key)
+	credBytes, err := base64.StdEncoding.DecodeString(key)
+	if err != nil {
+		log.Fatal(err)
+	}
 	config, _ := google.JWTConfigFromJSON(credBytes, "https://www.googleapis.com/auth/spreadsheets")
 	client := config.Client(ctx)
 	srv, _ := sheets.NewService(ctx, option.WithHTTPClient(client))
