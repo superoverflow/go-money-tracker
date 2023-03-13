@@ -1,7 +1,11 @@
 version: '2.2'
 services:
   job:
-    build: .
+    build:
+      context: .
+      target: final
+    working_dir: /tmp
+    command: ["./money-tracker"]
     volumes:
-      - .env:.env:ro
-      - urls.json:urls.json:ro
+      - ${PWD}/.env:/tmp/.env:ro
+      - ${PWD}/urls.json:/tmp/urls.json:ro
